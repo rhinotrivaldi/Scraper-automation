@@ -21,6 +21,7 @@ Dirancang **modular, aman, fleksibel**, dan mudah diintegrasikan dengan **n8n** 
 - **Optimasi resource** (block resource tidak perlu, headless mode)
 - **Error handling** lengkap
 - **Mudah diintegrasikan** dengan n8n
+- **Siap untuk deployment Docker + PM2**
 
 ---
 
@@ -41,7 +42,7 @@ n8n->>n8n: Lanjutkan workflow otomatisasi
 
 ---
 
-## ⚙️ Setup Project
+## ⚙️ Setup Project (Tanpa Docker)
 
 1. **Clone repo ini** ke server Anda
 2. **Install dependencies**
@@ -50,7 +51,7 @@ n8n->>n8n: Lanjutkan workflow otomatisasi
 npm install
 ```
 
-3. **(Opsional)** Buat file `.env` untuk API key, port, dll (tidak wajib, karena parameter dikirim via request)
+3. **(Opsional)** Buat file `.env.production` untuk API key, port, dll
 
 4. **Jalankan server**
 
@@ -58,7 +59,39 @@ npm install
 node app.js
 ```
 
-Server akan berjalan di port default `3000` atau sesuai `.env`.
+Server akan berjalan di port default `3002` atau sesuai `.env`.
+
+---
+
+## 🐳 Deployment with Docker
+
+### **Build Docker image**
+
+```bash
+docker build -t scraper-service .
+```
+
+### **Jalankan container**
+
+```bash
+docker run -d --name scraper-service -p 3002:3002 --env-file .env.production scraper-service
+```
+
+- **`--env-file`**: file environment production (isi API key, dsb)
+- **`-p 3002:3002`**: mapping port
+
+### **Dockerfile highlights**
+
+- Berbasis **`node:18-alpine`** (ringan, update secara berkala)
+- Install dependencies + **PM2** untuk process manager
+- Start pakai **`pm2-runtime`** dan `ecosystem.config.js`
+- Siap untuk production
+
+### **Tips keamanan Docker**
+
+- Gunakan **image Node.js terbaru** untuk menghindari kerentanan
+- Update image secara berkala
+- Jangan hardcode API key di image, gunakan **env file**
 
 ---
 
@@ -138,6 +171,7 @@ POST http://localhost:3000/scrape
 - Pastikan parameter dikirim lengkap via request body.
 - Jika login gagal, cek kredensial dan selector.
 - Gunakan API key dan rate limit untuk keamanan (opsional).
+- Gunakan **env file** untuk menyimpan data sensitif, jangan hardcode di repo.
 
 ---
 
@@ -147,7 +181,7 @@ POST http://localhost:3000/scrape
 - **CSV tidak terdownload:** pastikan login sukses dan URL download benar.
 - **Response HTML bukan CSV:** biasanya karena session login tidak valid.
 - **Parsing error:** pastikan file benar-benar CSV, bukan HTML error page.
-- **.env tidak terbaca:** sekarang parameter dikirim via request, `.env` tidak wajib.
+- **.env tidak terbaca:** pastikan file ada dan server di-restart.
 
 ---
 
@@ -157,7 +191,9 @@ POST http://localhost:3000/scrape
 /controllers
   scrapeController.js   # Logic scraping & parsing
 app.js                 # Setup Express server & routing
-.env                   # (Opsional) konfigurasi
+Dockerfile             # Docker build config
+ecosystem.config.js    # PM2 process manager config
+.env.production         # (Opsional) environment production
 .gitignore             # Ignore file
 package.json           # Dependencies
 README.md              # Dokumentasi ini
