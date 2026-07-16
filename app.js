@@ -1,16 +1,12 @@
 require('dotenv').config();
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const cors = require('cors');
 const scrapeController = require('./controllers/scrapeController');
 
 const app = express();
 app.use(express.json());
 
-// Middleware CORS (atur origin sesuai domain n8n Anda)
-app.use(cors({
-  origin: '*'
-}));
+// ponytail: cors dihapus — API ini dipanggil server-to-server (n8n), CORS hanya relevan untuk browser
 
 // Middleware rate limit
 app.use(rateLimit({

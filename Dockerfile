@@ -1,18 +1,22 @@
-FROM node:18.20.8-alpine
+FROM node:22-slim
 
-# Set direktori kerja
+# Chromium sistem untuk Puppeteer (bundled Chrome tidak jalan di image minimal)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium fonts-liberation ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Pakai Chromium sistem, skip download Chrome bawaan (~170MB)
+ENV PUPPETEER_SKIP_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
 WORKDIR /app
 
-# Copy package.json dan package-lock.json
 COPY package*.json ./
-
-# Install dependencies
-RUN npm install -G pm2 && npm install
+RUN npm install --omit=dev
 
 COPY . .
 
-# Expose port untuk running app nya
 EXPOSE 3002
 
-# Start menggunakan pm2
-CMD ["pm2-runtime", "start", "ecosystem.config.js", "--env", "production"]
+# ponytail: pm2 dihapus — restart ditangani docker (--restart unless-stopped)
+CMD ["node", "app.js"]
